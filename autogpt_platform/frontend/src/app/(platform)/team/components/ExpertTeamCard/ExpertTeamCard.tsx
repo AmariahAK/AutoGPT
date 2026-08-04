@@ -17,10 +17,6 @@ interface Props {
   onEditSoul: (expertId: string) => void;
 }
 
-function stopKeyboardPropagation(event: KeyboardEvent<HTMLButtonElement>) {
-  event.stopPropagation();
-}
-
 export function ExpertTeamCard({
   expert,
   onInstallWorkflow,
@@ -39,17 +35,20 @@ export function ExpertTeamCard({
     onEditSoul(expert.id);
   }
 
+  function handleCardKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onOpenProfile(expert.id);
+    }
+  }
+
   return (
     <div
       role="button"
       tabIndex={0}
       onClick={() => onOpenProfile(expert.id)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpenProfile(expert.id);
-        }
-      }}
+      onKeyDown={handleCardKeyDown}
       className="flex cursor-pointer flex-col gap-3 rounded-2xl border border-zinc-200 bg-white p-5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-[0_16px_40px_-16px_rgba(16,24,40,0.18)]"
     >
       <div className="flex items-center gap-3">
@@ -122,7 +121,6 @@ export function ExpertTeamCard({
           size="small"
           leftIcon={<Icon icon={PencilIcon} size={16} />}
           onClick={handleEditSoulClick}
-          onKeyDown={stopKeyboardPropagation}
         >
           Edit Soul
         </Button>
