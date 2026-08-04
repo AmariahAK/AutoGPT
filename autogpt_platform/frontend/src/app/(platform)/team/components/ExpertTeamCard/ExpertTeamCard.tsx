@@ -8,13 +8,17 @@ import { Button } from "@/components/atoms/Button/Button";
 import { Icon } from "@/components/atoms/Icon/Icon";
 import { Text } from "@/components/atoms/Text/Text";
 import { PencilIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
-import { MouseEvent } from "react";
+import { KeyboardEvent, MouseEvent } from "react";
 
 interface Props {
   expert: Expert;
   onInstallWorkflow: (expertId: string) => void;
   onOpenProfile: (expertId: string) => void;
   onEditSoul: (expertId: string) => void;
+}
+
+function stopKeyboardPropagation(event: KeyboardEvent<HTMLButtonElement>) {
+  event.stopPropagation();
 }
 
 export function ExpertTeamCard({
@@ -118,6 +122,7 @@ export function ExpertTeamCard({
           size="small"
           leftIcon={<Icon icon={PencilIcon} size={16} />}
           onClick={handleEditSoulClick}
+          onKeyDown={stopKeyboardPropagation}
         >
           Edit Soul
         </Button>

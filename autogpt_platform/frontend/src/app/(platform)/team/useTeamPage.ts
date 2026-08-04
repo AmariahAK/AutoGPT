@@ -27,6 +27,10 @@ export function useTeamPage({ enabled }: Args) {
     setPickerExpertId(null);
   }
 
+  function closeSoul() {
+    setSoulExpertId(null);
+  }
+
   return {
     hiredExperts,
     isLoading: enabled && expertsQuery.isLoading,
@@ -42,6 +46,6 @@ export function useTeamPage({ enabled }: Args) {
     soulExpert:
       hiredExperts.find((expert) => expert.id === soulExpertId) ?? null,
     openSoul: setSoulExpertId,
-    closeSoul: () => setSoulExpertId(null),
+    closeSoul,
   };
 }
