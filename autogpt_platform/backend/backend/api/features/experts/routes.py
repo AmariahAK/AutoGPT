@@ -4,7 +4,12 @@ from fastapi import APIRouter, Security
 from pydantic import BaseModel, Field
 
 from backend.api.features.experts import experts_db
-from backend.api.features.experts.models import Expert, ExpertWorkflowRef, HireResult
+from backend.api.features.experts.models import (
+    Expert,
+    ExpertSoulUpdate,
+    ExpertWorkflowRef,
+    HireResult,
+)
 
 router = APIRouter(
     prefix="/experts",
@@ -62,6 +67,22 @@ async def get_expert(
     if expert is None:
         raise fastapi.HTTPException(status_code=404, detail="Expert not found")
     return expert
+
+
+@router.patch(
+    "/{expert_id}/soul",
+    operation_id="update_expert_soul",
+    responses={404: {"description": "Expert not found"}},
+)
+async def update_expert_soul(
+    expert_id: str,
+    request: ExpertSoulUpdate,
+    user_id: str = Security(autogpt_auth_lib.get_user_id),
+) -> Expert:
+    try:
+        return await experts_db.update_soul(user_id, expert_id, request)
+    except experts_db.ExpertNotFoundError as e:
+        raise fastapi.HTTPException(status_code=404, detail=str(e))
 
 
 @router.post(

@@ -3,7 +3,13 @@ import logging
 import prisma.errors
 import prisma.models
 
-from backend.api.features.experts.models import Expert, ExpertWorkflowRef, HireResult
+from backend.api.features.experts.models import (
+    PROTECTED_SOUL_RULES,
+    Expert,
+    ExpertSoulUpdate,
+    ExpertWorkflowRef,
+    HireResult,
+)
 from backend.api.features.library import db as library_db
 
 logger = logging.getLogger(__name__)
@@ -47,6 +53,10 @@ def _to_model(row: prisma.models.Expert) -> Expert:
         bio=row.bio,
         skills=row.skills or [],
         identity=row.identity,
+        voice_preferences=row.voicePreferences,
+        boundaries=row.boundaries,
+        learned_notes=row.learnedNotes or [],
+        protected_soul_rules=list(PROTECTED_SOUL_RULES),
         is_template=row.isTemplate,
         source_template_id=row.sourceTemplateId,
         is_archived=row.isArchived,
@@ -115,6 +125,9 @@ async def hire_expert(user_id: str, template_id: str, name: str | None) -> HireR
         "bio": template.bio,
         "skills": template.skills or [],
         "identity": template.identity,
+        "voicePreferences": template.voicePreferences,
+        "boundaries": template.boundaries,
+        "learnedNotes": template.learnedNotes or [],
         "sourceTemplateId": template.id,
     }
     if template.toolProfile is not None:
@@ -158,6 +171,30 @@ async def _existing_hire_result(row: prisma.models.Expert) -> HireResult:
         if revived is not None:
             row = revived
     return HireResult(expert=_to_model(row), failed_preloads=[])
+
+
+async def update_soul(user_id: str, expert_id: str, soul: ExpertSoulUpdate) -> Expert:
+    updated = await prisma.models.Expert.prisma().update_many(
+        where={
+            "id": expert_id,
+            "ownerUserId": user_id,
+            "isTemplate": False,
+            "isArchived": False,
+        },
+        data={
+            "name": soul.name,
+            "identity": soul.identity,
+            "voicePreferences": soul.voice_preferences,
+            "boundaries": soul.boundaries,
+        },
+    )
+    if updated == 0:
+        raise ExpertNotFoundError(expert_id)
+
+    expert = await get_expert(user_id, expert_id)
+    if expert is None:
+        raise ExpertNotFoundError(expert_id)
+    return expert
 
 
 async def _install_preloads(

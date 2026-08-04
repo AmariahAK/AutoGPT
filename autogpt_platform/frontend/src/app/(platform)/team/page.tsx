@@ -11,6 +11,7 @@ import { notFound } from "next/navigation";
 import { AutopilotCard } from "./components/AutopilotCard";
 import { EmptyTeamState } from "./components/EmptyTeamState";
 import { ExpertTeamCard } from "./components/ExpertTeamCard/ExpertTeamCard";
+import { SoulDrawer } from "./components/SoulDrawer/SoulDrawer";
 import { useTeamPage } from "./useTeamPage";
 
 const MAIN_CLASS =
@@ -30,6 +31,9 @@ export default function TeamPage() {
     profileExpert,
     openProfile,
     closeProfile,
+    soulExpert,
+    openSoul,
+    closeSoul,
   } = useTeamPage({ enabled: Boolean(enabled) && ready });
 
   if (!ready) {
@@ -71,6 +75,7 @@ export default function TeamPage() {
                 expert={expert}
                 onInstallWorkflow={installWorkflow}
                 onOpenProfile={openProfile}
+                onEditSoul={openSoul}
               />
             ))}
       </div>
@@ -94,6 +99,11 @@ export default function TeamPage() {
         expert={profileExpert}
         onClose={closeProfile}
         presentation="drawer"
+      />
+      <SoulDrawer
+        key={soulExpert?.id ?? "closed-soul"}
+        expert={soulExpert}
+        onClose={closeSoul}
       />
     </main>
   );

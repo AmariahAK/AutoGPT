@@ -9,6 +9,7 @@ interface Args {
 export function useTeamPage({ enabled }: Args) {
   const [pickerExpertId, setPickerExpertId] = useState<string | null>(null);
   const [profileExpertId, setProfileExpertId] = useState<string | null>(null);
+  const [soulExpertId, setSoulExpertId] = useState<string | null>(null);
 
   const expertsQuery = useListExperts({
     query: { select: (x) => x.data as Expert[], enabled },
@@ -38,5 +39,9 @@ export function useTeamPage({ enabled }: Args) {
       hiredExperts.find((expert) => expert.id === profileExpertId) ?? null,
     openProfile: setProfileExpertId,
     closeProfile: () => setProfileExpertId(null),
+    soulExpert:
+      hiredExperts.find((expert) => expert.id === soulExpertId) ?? null,
+    openSoul: setSoulExpertId,
+    closeSoul: () => setSoulExpertId(null),
   };
 }

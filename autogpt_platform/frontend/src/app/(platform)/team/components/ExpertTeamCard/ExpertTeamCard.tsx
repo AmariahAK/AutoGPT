@@ -5,27 +5,34 @@ import {
   AvatarImage,
 } from "@/components/atoms/Avatar/Avatar";
 import { Button } from "@/components/atoms/Button/Button";
-import { Text } from "@/components/atoms/Text/Text";
-import { MouseEvent } from "react";
-import { PlusSignIcon } from "@hugeicons/core-free-icons";
 import { Icon } from "@/components/atoms/Icon/Icon";
+import { Text } from "@/components/atoms/Text/Text";
+import { PencilIcon, PlusSignIcon } from "@hugeicons/core-free-icons";
+import { MouseEvent } from "react";
 
 interface Props {
   expert: Expert;
   onInstallWorkflow: (expertId: string) => void;
   onOpenProfile: (expertId: string) => void;
+  onEditSoul: (expertId: string) => void;
 }
 
 export function ExpertTeamCard({
   expert,
   onInstallWorkflow,
   onOpenProfile,
+  onEditSoul,
 }: Props) {
   const workflowCount = expert.workflows.length;
 
   function handleInstallClick(event: MouseEvent) {
     event.stopPropagation();
     onInstallWorkflow(expert.id);
+  }
+
+  function handleEditSoulClick(event: MouseEvent) {
+    event.stopPropagation();
+    onEditSoul(expert.id);
   }
 
   return (
@@ -96,7 +103,7 @@ export function ExpertTeamCard({
           </div>
         ) : null}
       </div>
-      <div className="mt-auto flex gap-2">
+      <div className="mt-auto flex flex-wrap gap-2">
         <Button
           as="NextLink"
           href={`/copilot?expertId=${expert.id}`}
@@ -105,6 +112,14 @@ export function ExpertTeamCard({
           onClick={(event) => event.stopPropagation()}
         >
           Chat
+        </Button>
+        <Button
+          variant="secondary"
+          size="small"
+          leftIcon={<Icon icon={PencilIcon} size={16} />}
+          onClick={handleEditSoulClick}
+        >
+          Edit Soul
         </Button>
         <Button
           variant="ghost"
