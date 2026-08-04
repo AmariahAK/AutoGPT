@@ -10,6 +10,7 @@ export function useTeamPage({ enabled }: Args) {
   const [pickerExpertId, setPickerExpertId] = useState<string | null>(null);
   const [profileExpertId, setProfileExpertId] = useState<string | null>(null);
   const [soulExpertId, setSoulExpertId] = useState<string | null>(null);
+  const [soulDrawerKey, setSoulDrawerKey] = useState(0);
 
   const expertsQuery = useListExperts({
     query: { select: (x) => x.data as Expert[], enabled },
@@ -31,6 +32,11 @@ export function useTeamPage({ enabled }: Args) {
     setSoulExpertId(null);
   }
 
+  function openSoul(expertId: string) {
+    setSoulExpertId(expertId);
+    setSoulDrawerKey((current) => current + 1);
+  }
+
   return {
     hiredExperts,
     isLoading: enabled && expertsQuery.isLoading,
@@ -45,7 +51,8 @@ export function useTeamPage({ enabled }: Args) {
     closeProfile: () => setProfileExpertId(null),
     soulExpert:
       hiredExperts.find((expert) => expert.id === soulExpertId) ?? null,
-    openSoul: setSoulExpertId,
+    soulDrawerKey,
+    openSoul,
     closeSoul,
   };
 }

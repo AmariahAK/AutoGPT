@@ -32,6 +32,7 @@ export default function TeamPage() {
     openProfile,
     closeProfile,
     soulExpert,
+    soulDrawerKey,
     openSoul,
     closeSoul,
   } = useTeamPage({ enabled: Boolean(enabled) && ready });
@@ -100,11 +101,7 @@ export default function TeamPage() {
         onClose={closeProfile}
         presentation="drawer"
       />
-      <SoulDrawer
-        key={soulExpert?.id ?? "closed-soul"}
-        expert={soulExpert}
-        onClose={closeSoul}
-      />
+      <SoulDrawer key={soulDrawerKey} expert={soulExpert} onClose={closeSoul} />
     </main>
   );
 }
