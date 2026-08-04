@@ -55,7 +55,6 @@ def _to_model(row: prisma.models.Expert) -> Expert:
         identity=row.identity,
         voice_preferences=row.voicePreferences,
         boundaries=row.boundaries,
-        learned_notes=row.learnedNotes or [],
         protected_soul_rules=list(PROTECTED_SOUL_RULES),
         is_template=row.isTemplate,
         source_template_id=row.sourceTemplateId,
@@ -127,7 +126,6 @@ async def hire_expert(user_id: str, template_id: str, name: str | None) -> HireR
         "identity": template.identity,
         "voicePreferences": template.voicePreferences,
         "boundaries": template.boundaries,
-        "learnedNotes": template.learnedNotes or [],
         "sourceTemplateId": template.id,
     }
     if template.toolProfile is not None:
