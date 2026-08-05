@@ -7,19 +7,22 @@ import Avatar, {
   AvatarFallback,
   AvatarImage,
 } from "@/components/atoms/Avatar/Avatar";
+import { Icon } from "@/components/atoms/Icon/Icon";
 import { CreateOrgDialog } from "@/components/contextual/CreateOrgDialog/CreateOrgDialog";
-import { useOrgTeamSwitcher } from "./useOrgTeamSwitcher";
+import { Flag, useGetFlag } from "@/services/feature-flags/use-get-flag";
 import {
-  CaretDownIcon,
-  CheckIcon,
-  GearSixIcon,
-  PlusIcon,
-} from "@phosphor-icons/react";
+  ArrowDown01Icon,
+  PlusSignIcon,
+  Settings02Icon,
+  Tick02Icon,
+} from "@hugeicons/core-free-icons";
 import Link from "next/link";
 import { useState } from "react";
+import { useOrgTeamSwitcher } from "./useOrgTeamSwitcher";
 
 export function OrgTeamSwitcher() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const canManageOrgs = useGetFlag(Flag.SHOW_ORG_SETTINGS);
   const {
     orgs,
     teams,
@@ -55,7 +58,7 @@ export function OrgTeamSwitcher() {
               </AvatarFallback>
             </Avatar>
             <span className="max-w-[8rem] truncate">{activeOrg?.name}</span>
-            <CaretDownIcon size={12} />
+            <Icon icon={ArrowDown01Icon} size={12} />
           </button>
         </PopoverTrigger>
 
@@ -87,7 +90,11 @@ export function OrgTeamSwitcher() {
                   <span className="text-xs text-neutral-400">Personal</span>
                 )}
                 {org.id === activeOrg?.id && (
-                  <CheckIcon size={14} className="text-green-600" />
+                  <Icon
+                    icon={Tick02Icon}
+                    size={14}
+                    className="text-green-600"
+                  />
                 )}
               </button>
             ))}
@@ -113,7 +120,11 @@ export function OrgTeamSwitcher() {
                       <span className="text-xs text-neutral-400">Private</span>
                     )}
                     {ws.id === activeTeam?.id && (
-                      <CheckIcon size={14} className="text-green-600" />
+                      <Icon
+                        icon={Tick02Icon}
+                        size={14}
+                        className="text-green-600"
+                      />
                     )}
                   </button>
                 ))}
@@ -128,22 +139,26 @@ export function OrgTeamSwitcher() {
               className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-neutral-500 hover:bg-neutral-100"
               data-testid="org-switcher-manage"
             >
-              <GearSixIcon size={14} />
+              <Icon icon={Settings02Icon} size={14} />
               <span>Manage organization</span>
             </Link>
-            <button
-              type="button"
-              className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-neutral-500 hover:bg-neutral-100"
-              onClick={() => setIsCreateOpen(true)}
-              data-testid="org-switcher-create"
-            >
-              <PlusIcon size={14} />
-              <span>Create organization</span>
-            </button>
+            {canManageOrgs && (
+              <button
+                type="button"
+                className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-neutral-500 hover:bg-neutral-100"
+                onClick={() => setIsCreateOpen(true)}
+                data-testid="org-switcher-create"
+              >
+                <Icon icon={PlusSignIcon} size={14} />
+                <span>Create organization</span>
+              </button>
+            )}
           </div>
         </PopoverContent>
       </Popover>
-      <CreateOrgDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      {canManageOrgs && (
+        <CreateOrgDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      )}
     </>
   );
 }

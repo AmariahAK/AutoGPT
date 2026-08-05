@@ -22,6 +22,10 @@ export enum Flag {
   CHAT_PINNING = "chat-pinning",
   TASK_PROGRESS_BAR = "task-progress-bar",
   HIRE_EXPERTS = "hire-experts",
+  // Replaces the onboarding pillbox step with the voice brain dump.
+  // Mirror of the backend ``Flag`` enum — the endpoints 404 when off, so
+  // both sides must agree. Off renders the pillbox flow untouched.
+  ONBOARDING_BRAIN_DUMP = "onboarding-brain-dump",
   // Graphiti memory + dream-system gates. Mirror of the backend
   // ``Flag`` enum in ``backend/util/feature_flag.py``. Frontend reads
   // them when memory/dream-related UI surfaces ship (P6+ on the
@@ -35,6 +39,12 @@ export enum Flag {
   DREAM_PASS_ENABLED = "dream-pass-enabled",
   DREAM_PASS_WEB_FACT_CHECK = "dream-pass-web-fact-check",
   DREAM_PASS_INVALIDATE_ENTITY = "dream-pass-invalidate-entity",
+  // Gates the org/teams management UI (org settings page + the
+  // create-organization entry points on the switchers). Defaults false
+  // below — fail-closed, so a LaunchDarkly outage or a missing flag key
+  // never exposes the surface. Use ``NEXT_PUBLIC_FORCE_FLAG_*`` env
+  // overrides to enable it for local-dev / Playwright runs.
+  SHOW_ORG_SETTINGS = "show-org-settings",
   // JSON flag mapping copilot-bot platform key (lowercase) -> visible on the
   // Bots settings page. Lets ops hide a platform (e.g. Slack while its
   // Marketplace review is pending) without a deploy. Missing keys default to
@@ -61,11 +71,17 @@ const defaultFlags = {
   [Flag.CHAT_PINNING]: false,
   [Flag.TASK_PROGRESS_BAR]: false,
   [Flag.HIRE_EXPERTS]: false,
+  // Off by default: with no LaunchDarkly key (local dev, CI, Playwright)
+  // the wizard falls back to this map, and a ``true`` here renders the
+  // brain dump for everyone — which is what the backend 404s are meant to
+  // prevent. Use NEXT_PUBLIC_FORCE_FLAG_ONBOARDING_BRAIN_DUMP locally.
+  [Flag.ONBOARDING_BRAIN_DUMP]: false,
   [Flag.GRAPHITI_MEMORY]: false,
   [Flag.GRAPHITI_COMMUNITIES_ENABLED]: false,
   [Flag.DREAM_PASS_ENABLED]: false,
   [Flag.DREAM_PASS_WEB_FACT_CHECK]: false,
   [Flag.DREAM_PASS_INVALIDATE_ENTITY]: false,
+  [Flag.SHOW_ORG_SETTINGS]: false,
   [Flag.COPILOT_BOT_PLATFORMS]: {} as Record<string, boolean>,
 };
 
@@ -122,6 +138,8 @@ function readEnvOverride(flag: Flag): string | undefined {
       return process.env.NEXT_PUBLIC_FORCE_FLAG_TASK_PROGRESS_BAR;
     case Flag.HIRE_EXPERTS:
       return process.env.NEXT_PUBLIC_FORCE_FLAG_HIRE_EXPERTS;
+    case Flag.ONBOARDING_BRAIN_DUMP:
+      return process.env.NEXT_PUBLIC_FORCE_FLAG_ONBOARDING_BRAIN_DUMP;
     case Flag.GRAPHITI_MEMORY:
       return process.env.NEXT_PUBLIC_FORCE_FLAG_GRAPHITI_MEMORY;
     case Flag.GRAPHITI_COMMUNITIES_ENABLED:
@@ -132,6 +150,8 @@ function readEnvOverride(flag: Flag): string | undefined {
       return process.env.NEXT_PUBLIC_FORCE_FLAG_DREAM_PASS_WEB_FACT_CHECK;
     case Flag.DREAM_PASS_INVALIDATE_ENTITY:
       return process.env.NEXT_PUBLIC_FORCE_FLAG_DREAM_PASS_INVALIDATE_ENTITY;
+    case Flag.SHOW_ORG_SETTINGS:
+      return process.env.NEXT_PUBLIC_FORCE_FLAG_SHOW_ORG_SETTINGS;
     case Flag.COPILOT_BOT_PLATFORMS:
       return undefined;
   }

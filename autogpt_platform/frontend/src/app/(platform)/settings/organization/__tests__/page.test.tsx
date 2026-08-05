@@ -32,6 +32,22 @@ vi.mock("@/lib/auth/hooks/useAuth", () => ({
   }),
 }));
 
+const { mockShowOrgSettings } = vi.hoisted(() => ({
+  mockShowOrgSettings: { enabled: true, ready: true },
+}));
+
+vi.mock("@/services/feature-flags/use-get-flag", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/services/feature-flags/use-get-flag")
+    >();
+  return {
+    ...actual,
+    useGetFlag: vi.fn(() => mockShowOrgSettings.enabled),
+    useFlagStatus: vi.fn(() => mockShowOrgSettings),
+  };
+});
+
 const TEAM_ORG = {
   id: "org-company",
   name: "Acme Inc",
@@ -115,6 +131,30 @@ describe("OrganizationSettingsPage", () => {
   beforeEach(() => {
     window.localStorage.clear();
     seedActiveOrg(TEAM_ORG.id);
+    mockShowOrgSettings.enabled = true;
+    mockShowOrgSettings.ready = true;
+  });
+
+  it("renders a coming-soon placeholder when the org-settings flag is off", async () => {
+    mockShowOrgSettings.enabled = false;
+    mockTeamOrg();
+
+    render(<OrganizationSettingsPage />);
+
+    expect(await screen.findByText(/coming soon/i)).toBeDefined();
+    expect(screen.queryByTestId("org-profile-section")).toBeNull();
+    expect(screen.queryByTestId("org-danger-zone")).toBeNull();
+    expect(screen.queryByTestId("org-invitations-section")).toBeNull();
+  });
+
+  it("waits for the flag to resolve before showing the placeholder", () => {
+    mockShowOrgSettings.enabled = false;
+    mockShowOrgSettings.ready = false;
+    mockTeamOrg();
+
+    render(<OrganizationSettingsPage />);
+
+    expect(screen.queryByText(/coming soon/i)).toBeNull();
   });
 
   it("renders profile, members and invitations for an owner", async () => {

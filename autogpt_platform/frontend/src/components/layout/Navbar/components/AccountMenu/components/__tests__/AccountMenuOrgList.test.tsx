@@ -1,7 +1,22 @@
 import { useOrgTeamStore } from "@/services/org-team/store";
 import { render, screen } from "@/tests/integrations/test-utils";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { mockShowOrgSettings } = vi.hoisted(() => ({
+  mockShowOrgSettings: { value: true },
+}));
+
+vi.mock("@/services/feature-flags/use-get-flag", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/services/feature-flags/use-get-flag")
+    >();
+  return {
+    ...actual,
+    useGetFlag: vi.fn(() => mockShowOrgSettings.value),
+  };
+});
 
 import { AccountMenuOrgList } from "../AccountMenuOrgList";
 
@@ -58,6 +73,7 @@ function seedStore(overrides = {}) {
 describe("AccountMenuOrgList", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    mockShowOrgSettings.value = true;
   });
 
   it("renders nothing until the org store has loaded", () => {
@@ -117,5 +133,27 @@ describe("AccountMenuOrgList", () => {
     await userEvent.click(screen.getByTestId("create-organization-button"));
 
     expect(await screen.findByText("URL slug")).toBeDefined();
+  });
+
+  it("hides the create button when the org-settings flag is off", () => {
+    mockShowOrgSettings.value = false;
+    seedStore();
+
+    render(<AccountMenuOrgList />);
+
+    expect(screen.queryByTestId("create-organization-button")).toBeNull();
+    // Switching between orgs the user already belongs to keeps working.
+    expect(screen.getByText(PERSONAL_ORG.name)).toBeDefined();
+    expect(screen.getByText(COMPANY_ORG.name)).toBeDefined();
+  });
+
+  it("shows the empty state without a create button when the flag is off", () => {
+    mockShowOrgSettings.value = false;
+    seedStore({ orgs: [], teams: [] });
+
+    render(<AccountMenuOrgList />);
+
+    expect(screen.getByText("No organizations yet")).toBeDefined();
+    expect(screen.queryByTestId("create-organization-button")).toBeNull();
   });
 });

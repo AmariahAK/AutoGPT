@@ -1,7 +1,22 @@
 import { useOrgTeamStore } from "@/services/org-team/store";
 import { render, screen, waitFor } from "@/tests/integrations/test-utils";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { mockShowOrgSettings } = vi.hoisted(() => ({
+  mockShowOrgSettings: { value: true },
+}));
+
+vi.mock("@/services/feature-flags/use-get-flag", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/services/feature-flags/use-get-flag")
+    >();
+  return {
+    ...actual,
+    useGetFlag: vi.fn(() => mockShowOrgSettings.value),
+  };
+});
 
 import { OrgTeamSwitcher } from "../OrgTeamSwitcher";
 
@@ -65,6 +80,7 @@ async function openSwitcher() {
 describe("OrgTeamSwitcher", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    mockShowOrgSettings.value = true;
   });
 
   it("renders nothing before the org context has loaded", () => {
@@ -147,6 +163,29 @@ describe("OrgTeamSwitcher", () => {
 
     expect(useOrgTeamStore.getState().activeTeamID).toBe(PRIVATE_TEAM.id);
     expect(useOrgTeamStore.getState().activeOrgID).toBe(COMPANY_ORG.id);
+  });
+
+  it("hides the create-organization entry point when the org-settings flag is off", async () => {
+    mockShowOrgSettings.value = false;
+    seedStore();
+    render(<OrgTeamSwitcher />);
+
+    await openSwitcher();
+
+    expect(screen.queryByTestId("org-switcher-create")).toBeNull();
+    expect(screen.queryByText("Create organization")).toBeNull();
+  });
+
+  it("keeps org switching working when the org-settings flag is off", async () => {
+    mockShowOrgSettings.value = false;
+    seedStore();
+    render(<OrgTeamSwitcher />);
+
+    await openSwitcher();
+    expect(screen.getByText(PERSONAL_ORG.name)).toBeDefined();
+    await userEvent.click(screen.getByText(PERSONAL_ORG.name));
+
+    expect(useOrgTeamStore.getState().activeOrgID).toBe(PERSONAL_ORG.id);
   });
 
   it("re-selecting the already-active org leaves state untouched", async () => {

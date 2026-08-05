@@ -4,20 +4,23 @@ import Avatar, {
   AvatarFallback,
   AvatarImage,
 } from "@/components/atoms/Avatar/Avatar";
+import { Icon } from "@/components/atoms/Icon/Icon";
 import { CreateOrgDialog } from "@/components/contextual/CreateOrgDialog/CreateOrgDialog";
-import { CheckIcon, PlusIcon } from "@phosphor-icons/react";
+import { Flag, useGetFlag } from "@/services/feature-flags/use-get-flag";
+import { PlusSignIcon, Tick02Icon } from "@hugeicons/core-free-icons";
 import { useState } from "react";
 import { useOrgTeamSwitcher } from "../../OrgTeamSwitcher/useOrgTeamSwitcher";
 
 export function AccountMenuOrgList() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const canManageOrgs = useGetFlag(Flag.SHOW_ORG_SETTINGS);
   const { orgs, activeOrg, switchOrg, isLoaded } = useOrgTeamSwitcher();
 
   if (!isLoaded) {
     return null;
   }
 
-  const createOrgButton = (
+  const createOrgButton = canManageOrgs ? (
     <button
       type="button"
       className="flex w-full items-center gap-2 rounded-lg bg-neutral-100 px-2 py-1.5 text-sm text-neutral-700 hover:bg-neutral-200"
@@ -25,11 +28,15 @@ export function AccountMenuOrgList() {
       data-testid="create-organization-button"
     >
       <span className="flex h-5 w-5 items-center justify-center">
-        <PlusIcon size={14} />
+        <Icon icon={PlusSignIcon} size={14} />
       </span>
       <span className="flex-1 truncate text-left">Create organization</span>
     </button>
-  );
+  ) : null;
+
+  const createOrgDialog = canManageOrgs ? (
+    <CreateOrgDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+  ) : null;
 
   if (orgs.length === 0) {
     return (
@@ -40,7 +47,7 @@ export function AccountMenuOrgList() {
           </div>
           {createOrgButton}
         </div>
-        <CreateOrgDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+        {createOrgDialog}
       </>
     );
   }
@@ -70,14 +77,14 @@ export function AccountMenuOrgList() {
                 <span className="text-xs text-neutral-400">Personal</span>
               )}
               {org.id === activeOrg?.id && (
-                <CheckIcon size={14} className="text-green-600" />
+                <Icon icon={Tick02Icon} size={14} className="text-green-600" />
               )}
             </button>
           ))}
           {createOrgButton}
         </div>
       </div>
-      <CreateOrgDialog open={isCreateOpen} onOpenChange={setIsCreateOpen} />
+      {createOrgDialog}
     </>
   );
 }

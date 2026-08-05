@@ -3,6 +3,7 @@
 import { Skeleton } from "@/components/atoms/Skeleton/Skeleton";
 import { Text } from "@/components/atoms/Text/Text";
 import { ErrorCard } from "@/components/molecules/ErrorCard/ErrorCard";
+import { Flag, useFlagStatus } from "@/services/feature-flags/use-get-flag";
 
 import { DangerZoneSection } from "./components/DangerZoneSection/DangerZoneSection";
 import { InvitationsSection } from "./components/InvitationsSection/InvitationsSection";
@@ -12,6 +13,43 @@ import { OrgProfileSection } from "./components/OrgProfileSection/OrgProfileSect
 import { useOrganizationSettingsPage } from "./useOrganizationSettingsPage";
 
 export default function OrganizationSettingsPage() {
+  const { enabled, ready } = useFlagStatus(Flag.SHOW_ORG_SETTINGS);
+
+  // Wait for LaunchDarkly before deciding — rendering "coming soon" first
+  // would flash the placeholder at users who do have the flag on.
+  if (!ready) {
+    return <LoadingState />;
+  }
+
+  // The route stays reachable when the flag is off; it just shows a
+  // placeholder instead of the management UI.
+  if (!enabled) {
+    return (
+      <>
+        <Text variant="h4" className="text-[#1F1F20]">
+          Organization
+        </Text>
+        <Text variant="large" className="mt-2 text-zinc-600">
+          Coming soon.
+        </Text>
+      </>
+    );
+  }
+
+  return <OrganizationSettingsContent />;
+}
+
+function LoadingState() {
+  return (
+    <div className="flex flex-col gap-6 py-6">
+      <Skeleton className="h-8 w-64" />
+      <Skeleton className="h-40 w-full" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
+}
+
+function OrganizationSettingsContent() {
   const {
     org,
     members,
@@ -24,13 +62,7 @@ export default function OrganizationSettingsPage() {
   } = useOrganizationSettingsPage();
 
   if (isLoading) {
-    return (
-      <div className="flex flex-col gap-6 py-6">
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="h-40 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
+    return <LoadingState />;
   }
 
   if (isError || !org) {
