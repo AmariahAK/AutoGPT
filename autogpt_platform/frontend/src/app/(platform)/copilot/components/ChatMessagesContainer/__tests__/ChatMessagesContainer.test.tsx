@@ -3,6 +3,20 @@ import { render, screen, cleanup } from "@/tests/integrations/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ChatMessagesContainer } from "../ChatMessagesContainer";
 
+const flagState = vi.hoisted(() => ({ newToolUI: false }));
+
+vi.mock("@/services/feature-flags/use-get-flag", async (importOriginal) => {
+  const actual =
+    await importOriginal<
+      typeof import("@/services/feature-flags/use-get-flag")
+    >();
+  return {
+    ...actual,
+    useGetFlag: (flag: string) =>
+      flag === actual.Flag.NEW_TOOL_UI ? flagState.newToolUI : false,
+  };
+});
+
 const mockScrollEl = {
   scrollHeight: 100,
   scrollTop: 0,
@@ -56,6 +70,9 @@ vi.mock("@/components/ai-elements/message", () => ({
 
 vi.mock("../components/AssistantMessageActions", () => ({
   AssistantMessageActions: () => null,
+}));
+vi.mock("../components/ChainMessageParts", () => ({
+  ChainMessageParts: () => <div data-testid="chain-message-parts" />,
 }));
 
 vi.mock("../components/QueueBadge", () => ({
@@ -157,6 +174,43 @@ const baseProps = {
   onLoadMore: vi.fn(),
   onRetry: vi.fn(),
 };
+
+describe("ChatMessagesContainer — tool UI dispatch", () => {
+  const messages = [
+    {
+      id: "assistant-tools",
+      role: "assistant" as const,
+      parts: [{ type: "text" as const, text: "Done" }],
+    },
+  ];
+
+  afterEach(() => {
+    flagState.newToolUI = false;
+    cleanup();
+  });
+
+  it("uses chain rendering when the new tool UI flag is enabled", () => {
+    flagState.newToolUI = true;
+
+    render(<ChatMessagesContainer {...baseProps} messages={messages} />);
+
+    expect(screen.getByTestId("chain-message-parts")).toBeDefined();
+  });
+
+  it("keeps the legacy renderer when forceOldToolUI is set", () => {
+    flagState.newToolUI = true;
+
+    render(
+      <ChatMessagesContainer
+        {...baseProps}
+        messages={messages}
+        forceOldToolUI
+      />,
+    );
+
+    expect(screen.queryByTestId("chain-message-parts")).toBeNull();
+  });
+});
 
 // ── queued-messages rendering ─────────────────────────────────────────────
 
