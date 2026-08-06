@@ -71,7 +71,10 @@ function OrganizationSettingsContent() {
         <ErrorCard
           responseError={{ message: "Failed to load organization" }}
           context="organization settings"
-          onRetry={() => refetchOrg()}
+          onRetry={() => {
+            refetchOrg();
+            refetchMembers();
+          }}
         />
       </div>
     );
